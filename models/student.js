@@ -17,6 +17,10 @@ const Student = sequelize.define('student', {
         type: Sequelize.STRING,
         allowNull: false,
     },
+    status: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
     description: {
         type: Sequelize.STRING,
         allowNull: true
