@@ -4,65 +4,104 @@ const Teacher = require("../models/teacher");
 const { checkifStudentSuspended } = require("../util/validations");
 
 
-exports.registerStudent = async (req, res, next) => {
-    console.log("registerStudent");
+// exports.registerStudent = async (req, res, next) => {
+//     console.log("registerStudent");
 
-    const student = req.body.student;
-    const teacher = req.body.teacher;
-
-    // "teacher" : {
-    //     "name": "elin",
-    //     "email": "elin@gmail.com" 
-    // },
-    // "student" : {
-    //     "name": "Danial",
-    //     "email": "danialdo95@gmail.com" 
-    // }
-
-    const status =  await checkifStudentSuspended(student);
-
-    if (status === true) {  // if student is suspended {
-        res.status(403).json({
-            "message": "Student is suspended"
-        });
-    } else {
-
-        //Get Student ID
-        const stud = await Student.findOne({ where: { email: student.email }, attributes: ['id', 'name', 'email'] });
-
-        console.log("Student", stud);
-
-        //Get Teacher ID
-        const teach = await Teacher.findOne({ where: { email: teacher.email }, attributes: ['id', 'name', 'email'] });
-
-        console.log("teacher", teach);
+//     const student = req.body.student;
+//     const teacher = req.body.teacher
 
 
-        //Register a student to a teacher
-        Registration.create({
-            studentID: stud.dataValues.id,
-            teacherID: teach.dataValues.id
-        }).then(result => {
-            console.log(result);
-            res.status(204).json({
-                "message": "Registration successful"
-            }
-            );  // 204 is the status code for success
-        })
-    }
-};
+//     let studentArray = [];
+//     // check if student exists
+
+//     let studentsExist = await Student.findOne({ where: { email: student.email }, attributes: ['id', 'name', 'email'] });
+
+//     const status = await checkifStudentSuspended(student);
+
+//     if (status === true) {  // if student is suspended {
+//         res.status(403).json({
+//             "message": "Student is suspended"
+//         });
+//     } else {
+
+//         //Get Student ID
+//         const stud = await Student.findOne({ where: { email: student.email }, attributes: ['id', 'name', 'email'] });
+
+//         console.log("Student", stud);
+
+//         //Get Teacher ID
+//         const teach = await Teacher.findOne({ where: { email: teacher.email }, attributes: ['id', 'name', 'email'] });
+
+//         console.log("teacher", teach);
+
+
+//         //Register a student to a teacher
+//         Registration.create({
+//             studentID: stud.dataValues.id,
+//             teacherID: teach.dataValues.id
+//         }).then(result => {
+//             console.log(result);
+//             res.status(204).json({
+//                 "message": "Registration successful"
+//             }
+//             );  // 204 is the status code for success
+//         })
+//     }
+// };
 
 exports.registerStudents = async (req, res, next) => {
     console.log("registerStudents");
 
-    // {
-    //     "teacher": "teacherken@gmail.com"
-    //     "students":
-    //       [
-    //         "studentjon@gmail.com",
-    //         "studenthon@gmail.com"
-    //       ]
-    //   }
+    const student = req.body.student;
+    const teacher = req.body.teacher;
+
+    //Get teachers ID
+    const teach = await Teacher.findOne({ where: { email: teacher.email }, attributes: ['id', 'name', 'email'] });
+
+    console.log("teacher", teach);
+
+    if (teach) {
+        const teacherID = teach.dataValues.id;
+
+        student.forEach(async student => {
+            // check if student exists
+            let studentsExist = await Student.findOne({ where: { email: student.email }, attributes: ['id', 'name', 'email'] });
+
+            studentsExist = studentsExist.dataValues;
+
+            if (studentsExist) {
+                const status = await checkifStudentSuspended(student);
+
+                if (status === true) {  // if student is suspended {
+                    res.status(403).json({
+                        "message": "Student is suspended"
+                    });
+                } else {
+                    //Get Student ID
+                    const stud = await Student.findOne({ where: { email: student.email }, attributes: ['id', 'name', 'email'] });
+
+                    console.log("Student", stud);
+
+                    //Register a student to a teacher
+                    Registration.create({
+                        studentID: stud.dataValues.id,
+                        teacherID: teacherID
+                    }).then(result => {
+                        console.log(result);
+                        res.status(204).json({
+                            "message": "Registration successful"
+                        }
+                        );  // 204 is the status code for success
+                    })
+                }
+            }
+
+        });
+    } else {
+        res.status(404).json({
+            "message": "Teacher not found"
+        });
+    }
 
 };
 
